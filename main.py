@@ -12,15 +12,15 @@ from etldata import etl
 import numpy as np
 from matplotlib.pyplot import imshow
 from config import *
-
-batch_size = 128
+import torch.nn.functional as F
+import torch
+from ipdb import set_trace as bp 
 
 # look at my code my code is amazing
 # slow and steady
+# criterion = nn.CrossEntropyLoss()
 
-criterion = nn.CrossEntropyLoss()
-
-model_name = "vgg19"
+model_name = "resnet18"
 net = qmodel(model_name ,"cuda")
 
 train_transforms = transforms.Compose([transforms.ToTensor()
@@ -37,8 +37,32 @@ datadir_test = datadir + "test"
 
 # print()
 # xx = train_data[1]
+
 best_acc = 0
 
+link_temp = "./checkpoint/*.pt"
+link_temp = link_temp.replace("*",model_name)
+print(link_temp)
+if os.path.isfile(link_temp)==False:
+    state = {
+            'net': net.state_dict(),
+            'acc': 0,
+            'epoch': 0,
+        }
+    start_epoch = state['epoch']
+    best_acc = state['acc']
+
+    if not os.path.isdir('checkpoint'):
+        os.mkdir('checkpoint')
+    torch.save(state, link_temp)
+else:
+    assert os.path.isdir('checkpoint'), 'Error!'
+    checkpoint = torch.load(link_temp)
+    net.load_state_dict(checkpoint['net'])
+    best_acc = checkpoint['acc']
+    start_epoch = checkpoint['epoch']
+
+    
 # print(datadir_train)
 # print(datadir_test)
 
@@ -53,19 +77,22 @@ test_load = torch.utils.data.DataLoader(dataset=test_data,
                                         batch_size=batch_size,
                                         shuffle=False,
                                         num_workers=10)
+
+
 def lr_decay(epoch):
 
-    # 0.1 for epoch [0,150)
-    # 0.01 for epoch [150,250)
+    # 0.1 for epoch  from 0 to 150
+    # 0.01 for epoch from 150,250
     # 0.001 for epoch [250,350)
+
+    if epoch<1:
+        return 0.3
+
     if epoch<3:
         return 0.2
 
-    if epoch<50:
-        return 0.1
-      
     if epoch<150:
-        return 0.01
+        return 0.1
 
     if epoch<250:
         return 0.001
@@ -74,6 +101,7 @@ def lr_decay(epoch):
         return 0.0001
 
     return 0.00001
+
 # def generator(epoch):
 #     for batch_idx, (inputs, targets) in enumerate(train_load):
 #         pass
@@ -83,6 +111,7 @@ def train(epoch):
     device = "cuda"
     _lr = lr_decay(epoch)
     net.train()
+
     print("Learning_rate: ",_lr)
     # if optim_method == "SGD":
     optimizer = optim.SGD(net.parameters(), lr=_lr, momentum=0.9, weight_decay=5e-4)
@@ -93,13 +122,12 @@ def train(epoch):
     total = 0
     now = time.time()
     # print(len())
-    total_time = 0
     for batch_idx, (inputs, targets) in enumerate(train_load):
 
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
         outputs = net(inputs)
-        loss = criterion(outputs, targets)
+        loss = F.cross_entropy(outputs, targets)
         loss.backward()
         optimizer.step()
 
@@ -113,14 +141,12 @@ def train(epoch):
             time_now = time.time()-now
             total_data = len(train_data)
             done_data = batch_idx * batch_size
-            total_time += time_now
             print("Data: {} / {} Loss:{:.7f}  Time:{:.2f} s".format(done_data, total_data, loss_now, time_now))
             now = time.time()
-     
-    print("Total_time:{} mins".format(total_time/60))    
+
 def test(epoch):
 
-    global best_acc
+    global best_acc, link_temp
     net.eval()
     test_loss = 0
     correct = 0
@@ -130,7 +156,7 @@ def test(epoch):
             inputs, targets = inputs.to(device), targets.to(device)
 
             outputs = net(inputs)
-            loss = criterion(outputs, targets)
+            loss = F.cross_entropy(outputs, targets)
 
             test_loss += loss.item()
             _, predicted = outputs.max(1)
@@ -154,18 +180,23 @@ def test(epoch):
         }
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
-        link_temp = "./checkpoint/*.pt"
-        link_temp = link_temp.replace("*",model_name)
+    
         torch.save(state, link_temp)
         best_acc = acc
 
 def main():
 
-    for idx in range(epoch):
-        train(idx)
-        test(idx)
+    print("Start epoch: ",start_epoch)
+    print("Best now: ", best_acc)
+    pass
+    # for idx in range(start_epoch, total_epoch):
+    #     train(idx)
+    #     test(idx)
 
 if __name__ == "__main__":
-    print(">>> hey <<<")
+    pass
+    # print(os.path.isfile('./checkpoint/resnet18.pt'))
+    # print(">>> done <<<")
+    # print(">>> hey <<<")
     main()
-    print(">>> done <<<")
+    # print(">>> done <<<")
