@@ -1,5 +1,6 @@
 from model.resnet import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 from model.densenet import DenseNet121,DenseNet169,DenseNet201,DenseNet161
+from model.resnext import ResNeXt29_2x64d,ResNeXt29_32x4d,ResNeXt29_4x64d,ResNeXt29_8x64d
 from model.vgg import VGG
 
 def qmodel(name, device):
@@ -27,3 +28,5 @@ def qmodel(name, device):
         return DenseNet169().to(device)
     elif name == "densenet201":
         return DenseNet201().to(device)
+    elif name == "resnext":
+        return ResNeXt29_8x64d().to(device)
