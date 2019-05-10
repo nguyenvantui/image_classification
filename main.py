@@ -20,6 +20,7 @@ from ipdb import set_trace as bp
 # slow and steady
 # criterion = nn.CrossEntropyLoss()
 
+batch_size = 128
 model_name = "resnet18"
 net = qmodel(model_name ,"cuda")
 
@@ -188,15 +189,16 @@ def main():
 
     print("Start epoch: ",start_epoch)
     print("Best now: ", best_acc)
-    pass
+    print("Batch size: ",batch_size)
+    # pass
     # for idx in range(start_epoch, total_epoch):
     #     train(idx)
     #     test(idx)
 
 if __name__ == "__main__":
-    pass
+    # pass
     # print(os.path.isfile('./checkpoint/resnet18.pt'))
     # print(">>> done <<<")
     # print(">>> hey <<<")
-    main()
+    # main()
     # print(">>> done <<<")
