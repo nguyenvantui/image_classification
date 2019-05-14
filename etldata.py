@@ -8,7 +8,7 @@ class etl(torch.utils.data.Dataset):
     def __init__(self, split, transform=None):
         self.transform = transform
         self.split = split  # training set or test set
-        self.data = h5py.File('../input/etl.h5', 'r', driver='core')
+        self.data = h5py.File('../data.h5', 'r', driver='core')
 
         if self.split == 'training':
             self.train_datas = self.data['training_pixel']
