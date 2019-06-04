@@ -1,7 +1,3 @@
-'''ResNeXt in PyTorch.
-
-See the paper "Aggregated Residual Transformations for Deep Neural Networks" for more details.
-'''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
